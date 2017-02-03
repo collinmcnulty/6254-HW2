@@ -1,6 +1,8 @@
+from __future__ import division
 import numpy as np
 import json
 from sklearn.feature_extraction import text
+
 
 x = open('fedpapers_split.txt').read()
 papers = json.loads(x)
@@ -31,22 +33,48 @@ X = vectorizer.fit_transform(papersH+papersM+papersD).toarray()
 XH, XM, XD = X[:nH,:], X[nH:nH+nM,:], X[nH+nM:,:]
 
 # Estimate probability of each word in vocabulary being used by Hamilton
-fH = ???
+wordcountHam=[]
+for ind, word in enumerate(vectorizer.vocabulary_):
+    wordcountHam.append( sum(XH[:, ind]) )
+
+
 
 # Estimate probability of each word in vocabulary being used by Madison
-fM = ???
+wordcountMad=[]
+for word in vectorizer.vocabulary_:
+    wordcountMad.append(sum(XM[:, ind]))
+
+one=np.ones(len(wordcountHam))
+ham = np.array(wordcountHam)
+mad = np.array(wordcountMad)
+
+fH = (ham + one) / (ham+mad + 2*one)
+fM = (mad + one) / (ham+mad + 2*one)
 
 # Compute ratio of these probabilities
 fratio = fH/fM
 
 # Compute prior probabilities 
-piH = ???
-piM = ???
+piH = len(XH)+len(XM)
+piHb = len(XH)
+piH=piHb/piH
+piM = 1-piH
 
 for xd in XD: # Iterate over disputed documents
     # Compute likelihood ratio for Naive Bayes model
-    LR = ???
-    if LR>0.5:
+    total=0
+    for ind, word in enumerate(vectorizer.vocabulary_):
+        total= total * fratio**xd[ind]
+    hammy = piH * total
+    total =0
+
+    for ind, word in enumerate(vectorizer.vocabulary_):
+        total = total * (1-fratio)**xd[ind]
+    madness = piM * total
+    LR = hammy/madness
+
+for ind, xd in enumerate(XD):
+    if LR[ind] > 0.5:
         print 'Hamilton'
     else:
         print 'Madison'

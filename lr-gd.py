@@ -60,6 +60,7 @@ xtilde[:,1:] = x
 theta = np.zeros(shape[1]+1)
 
 # Run gradient descent
+#TODO
 alpha = ????
 tol = 1e-3
 maxiter = 10000
