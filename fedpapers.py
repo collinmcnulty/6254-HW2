@@ -2,7 +2,7 @@ from __future__ import division
 import numpy as np
 import json
 from sklearn.feature_extraction import text
-
+import math
 
 x = open('fedpapers_split.txt').read()
 papers = json.loads(x)
@@ -48,8 +48,8 @@ one=np.ones(len(wordcountHam))
 ham = np.array(wordcountHam)
 mad = np.array(wordcountMad)
 
-fH = (ham + one) / (ham+mad + 2*one)
-fM = (mad + one) / (ham+mad + 2*one)
+fH = (ham + one) / sum(ham + one)
+fM = (mad + one) / sum(mad + one)
 
 # Compute ratio of these probabilities
 fratio = fH/fM
@@ -64,17 +64,20 @@ for xd in XD: # Iterate over disputed documents
     # Compute likelihood ratio for Naive Bayes model
     total=0
     for ind, word in enumerate(vectorizer.vocabulary_):
-        total= total * fratio**xd[ind]
+        total= total + math.log(fH[ind]**xd[ind])
     hammy = piH * total
+
     total =0
-
     for ind, word in enumerate(vectorizer.vocabulary_):
-        total = total * (1-fratio)**xd[ind]
+        if fM[ind] <= 0:
+            a= fM[ind]**xd[ind]
+            1
+        step = xd[ind]*math.log(fM[ind])
+        total = total + step
     madness = piM * total
-    LR = hammy/madness
+    LR = hammy/(hammy+madness)
 
-for ind, xd in enumerate(XD):
-    if LR[ind] > 0.5:
+    if hammy > madness:
         print 'Hamilton'
     else:
         print 'Madison'
